@@ -1,0 +1,167 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "عرض كائنات قاعدة البيانات";
+}
+
+<div class="container mt-4" dir="rtl">
+    <h2 class="mb-4 text-primary border-bottom pb-2">عرض كائنات قاعدة البيانات من Oracle</h2>
+
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" class="form-control" name="Search" value="@Model.Search" placeholder="بحث عن اسم جدول أو إجراء أو Package..." />
+            <button class="btn btn-primary" type="submit">بحث</button>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>النوع</th>
+                    <th>الاسم</th>
+                    <th>الباكيج (إن وجد)</th>
+                    <th>الخيارات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obj in Model.PaginatedObjects)
+                {
+                    <tr>
+                        <td>@obj.Type</td>
+                        <td>@obj.Name</td>
+                        <td>@obj.Package</td>
+                        <td>
+                            <a class="btn btn-outline-secondary btn-sm"
+                               asp-page="./Index"
+                               asp-route-Type="@obj.Type"
+                               asp-route-Name="@obj.Name"
+                               asp-route-Schema="@obj.Schema"
+                               asp-route-Package="@obj.Package"
+                               asp-route-Search="@Model.Search"
+                               asp-route-PageNumber="@Model.CurrentPage">
+                                عرض التعريف
+                            </a>
+
+                            @if (obj.Type == "TABLE")
+                            {
+                                <a class="btn btn-outline-success btn-sm ms-2"
+                                   asp-page="./Index"
+                                   asp-route-Type="@obj.Type"
+                                   asp-route-Name="@obj.Name"
+                                   asp-route-Schema="@obj.Schema"
+                                   asp-route-Search="@Model.Search"
+                                   asp-route-PageNumber="@Model.CurrentPage"
+                                   asp-route-ShowData="true">
+                                    عرض البيانات
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="صفحات الكائنات">
+        <ul class="pagination justify-content-center">
+            @if (Model.CurrentPage > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link"
+                       asp-page="./Index"
+                       asp-route-Search="@Model.Search"
+                       asp-route-PageNumber="@(Model.CurrentPage - 1)">« السابق</a>
+                </li>
+            }
+            <li class="page-item disabled"><span class="page-link">الصفحة @Model.CurrentPage من @Model.TotalPages</span></li>
+            @if (Model.CurrentPage < Model.TotalPages)
+            {
+                <li class="page-item">
+                    <a class="page-link"
+                       asp-page="./Index"
+                       asp-route-Search="@Model.Search"
+                       asp-route-PageNumber="@(Model.CurrentPage + 1)">التالي »</a>
+                </li>
+            }
+        </ul>
+    </nav>
+
+    @if (!string.IsNullOrEmpty(Model.ObjectDefinition))
+    {
+        <div class="mt-5">
+            <h4 class="text-info border-bottom pb-2">نص التعريف الكامل:</h4>
+            <pre class="bg-light p-3 border rounded" style="white-space: pre-wrap; direction: ltr;">
+                @Model.ObjectDefinition
+                </pre>
+        </div>
+    }
+
+    @if (Model.TableData != null && Model.TableData.Any())
+    {
+        <div class="mt-5">
+            <h4 class="text-success border-bottom pb-2">عرض البيانات</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm text-center align-middle">
+                    <thead class="table-secondary">
+                        <tr>
+                            @foreach (var col in Model.TableData.First().Keys)
+                            {
+                                <th>@col</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.TableData)
+                        {
+                            <tr>
+                                @foreach (var val in row.Values)
+                                {
+                                    <td>@(val ?? "-")</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <nav aria-label="صفحات البيانات">
+                <ul class="pagination justify-content-center">
+                    @if (Model.CurrentDataPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link"
+                               asp-page="./Index"
+                               asp-route-Type="@Model.Request.Query["Type"]"
+                               asp-route-Name="@Model.Request.Query["Name"]"
+                               asp-route-Schema="@Model.Request.Query["Schema"]"
+                               asp-route-Search="@Model.Search"
+                               asp-route-ShowData="true"
+                               asp-route-DataPageNumber="@(Model.CurrentDataPage - 1)"
+                               asp-route-PageNumber="@Model.CurrentPage">
+                                « السابق
+                            </a>
+                        </li>
+                    }
+                    <li class="page-item disabled"><span class="page-link">صفحة البيانات @Model.CurrentDataPage من @Model.TotalDataPages</span></li>
+                    @if (Model.CurrentDataPage < Model.TotalDataPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link"
+                               asp-page="./Index"
+                               asp-route-Type="@Model.Request.Query["Type"]"
+                               asp-route-Name="@Model.Request.Query["Name"]"
+                               asp-route-Schema="@Model.Request.Query["Schema"]"
+                               asp-route-Search="@Model.Search"
+                               asp-route-ShowData="true"
+                               asp-route-DataPageNumber="@(Model.CurrentDataPage + 1)"
+                               asp-route-PageNumber="@Model.CurrentPage">
+                                التالي »
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
